@@ -1,0 +1,41 @@
+-- Выберите список всех комментариев, созданных пользователем с идентификатором 1.
+-- Поля для вывода: id, created_at, offer_id, comment_text.
+
+select  id, created_at, offer_id, comment_text
+from comments
+where user_id = 1
+
+-- Выведите список объявлений (id, created_at, user_id, offer_type, title, price, picture), 
+-- опубликованных в октябре 2021 года с сортировкой по дате публикации от самых свежих к более поздним. 
+-- Дату публикации выведите в формате ‘DD.MM.YYYY’.
+
+
+select id, (strftime('%Y',created_at)||'-'||strftime('%m',created_at)||'-'||strftime('%d',created_at)) as date_public, user_id, offer_type, title, price, picture
+from offers
+where created_at >= date('2021-10-01') and created_at < date('2021-11-01')
+order by created_at desc
+
+-- Выберите список пользователей, которые ещё не опубликовали ни одного объявления. 
+-- Поля для вывода: идентификатор пользователя, email, дата регистрации, имя и фамилия одной строкой как ‘user_name’. 
+-- Отсортируйте по возрастанию даты регистрации.
+
+select id, email, created_at, first_name || ' ' || last_name as user_name
+from users
+where users.id not in (select distinct offers.user_id from offers)  
+order by users.created_at
+
+-- Выберите среди всех объявлений на продажу самые дорогие товары, их количество динамическое и заранее неизвестно.
+-- Выведите их идентификаторы, автора (имя, фамилия), заголовки и цену продажи. 
+
+select offers.id, users.last_name || ' ' || users.last_name as author, offers.title, offers.price
+from offers, users
+where offers.user_id = users.id and offers.offer_type='sell' and offers.price > (select avg(price) from offers group by price)
+
+
+-- Для вывода на сайте выберите список всех категорий, в которых есть хотя бы одно объявление 
+-- с указанием количества объявлений по каждой категории. Выведите id категории, title, slug, количество объявлений (offer_amount).
+
+select categories.id, categories.title, categories.slug, count(category_offer.offer_id) as offer_amount
+from categories, category_offer
+where category_offer.category_id = categories.id
+group by category_offer.category_id
